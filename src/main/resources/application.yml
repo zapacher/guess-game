@@ -1,0 +1,8 @@
+game:
+  bet-timeout-seconds: 10
+  payout-multiplier: 9.9
+  max-bet-number: 10
+
+websocket:
+  timeout: 30
+  ping-pong: 5
