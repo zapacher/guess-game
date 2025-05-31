@@ -1,20 +1,22 @@
 package ee.ctob.websocket.data;
 
+import lombok.Value;
+
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
-
-public class BetRequest {
+@Value
+public class Request {
     @Min(1)
     @Max(10)
-    private int number;
+    int number;
 
     @DecimalMin("0.01")
-    private BigDecimal amount;
+    BigDecimal amount;
 
     @NotBlank
-    private String nickname;
+    String nickname;
 }
