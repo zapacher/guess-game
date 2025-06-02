@@ -1,5 +1,5 @@
 game:
-  bet-timeout-seconds: 10
+  round-seconds: 10
   payout-multiplier: 9.9
   max-bet-number: 10
   min-bet-number: 1

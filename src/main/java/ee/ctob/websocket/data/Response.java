@@ -1,16 +1,21 @@
 package ee.ctob.websocket.data;
 
-import ee.ctob.websocket.data.enums.Action;
-import ee.ctob.websocket.data.enums.Result;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import ee.ctob.data.enums.BetResult;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Response {
-    Action action;
-    Result result;
-    BigDecimal ammoint;
-    List<String> nicknamesWon;
+    BetResult betResult;
+    int betNumber;
+    double betAmount;
+    int winNumber;
+    double winAmount;
 }

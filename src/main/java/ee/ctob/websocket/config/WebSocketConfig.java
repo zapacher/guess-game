@@ -1,5 +1,6 @@
 package ee.ctob.websocket.config;
 
+import ee.ctob.GuessGameProperties;
 import ee.ctob.service.GameService;
 import ee.ctob.websocket.WebSocketHandler;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +15,11 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final GameService gameService;
+    private final GuessGameProperties properties;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new WebSocketHandler(gameService), "/ws")
+        registry.addHandler(new WebSocketHandler(gameService, properties), "/game/guess")
                 .setAllowedOrigins("*");
     }
 }
