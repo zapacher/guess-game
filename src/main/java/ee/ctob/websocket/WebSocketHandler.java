@@ -13,6 +13,9 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class WebSocketHandler extends TextWebSocketHandler {
@@ -28,8 +31,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        String nickname = "Player_" + UUID.randomUUID();
-        gameService.playerAdd(session, new Player(session, nickname));
+        gameService.playerAdd(new Player(session, System.currentTimeMillis()));
     }
 
     @Override
