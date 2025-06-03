@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class Winner {
     String nickname;
-    double winnings;
+    double winAmount;
 }

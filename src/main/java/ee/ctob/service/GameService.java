@@ -95,16 +95,16 @@ public class GameService {
             for (Bet bet : currentBets) {
                 Result.ResultBuilder result = Result.builder();
                 result.betNumber(bet.getNumber())
-                        .betAmount(bet.getAmount());
+                        .betAmount(bet.getAmount())
+                        .winNumber(winningNumber);
                 if (bet.getNumber() == winningNumber) {
                     result.betResult(WIN);
-                    result.winNumber(winningNumber);
                     double winAmount = bet.getAmount() * properties.getPayoutMultiplier();
                     result.winAmount(winAmount);
                     winners.add(
                             Winner.builder()
                                     .nickname(bet.getPlayer().getNickname())
-                                    .winnings(winAmount)
+                                    .winAmount(winAmount)
                                     .build());
                 } else {
                     result.betResult(LOSE);
@@ -140,14 +140,15 @@ public class GameService {
     }
 
     private Response buildResponse(Result result) {
-        Response response = Response.builder()
+        Response.ResponseBuilder response = Response.builder()
                 .betResult(result.getBetResult())
                 .betNumber(result.getBetNumber())
                 .betAmount(result.getBetAmount())
-                .winNumber(result.getWinNumber())
-                .winAmount(result.getWinAmount())
-                .build();
-        return response;
+                .winNumber(result.getWinNumber());
+        if(result.getBetResult().equals(LOSE)) {
+            return response.build();
+        }
+        return response.winAmount(result.getWinAmount()).build();
     }
 
 

@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Response {
     BetResult betResult;
-    int betNumber;
-    double betAmount;
-    int winNumber;
-    double winAmount;
+    Integer betNumber;
+    Double betAmount;
+    Integer winNumber;
+    Double winAmount;
 }
