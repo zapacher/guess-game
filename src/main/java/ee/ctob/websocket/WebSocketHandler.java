@@ -5,17 +5,24 @@ import ee.ctob.GuessGameProperties;
 import ee.ctob.data.Player;
 import ee.ctob.service.GameService;
 import ee.ctob.websocket.data.Request;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.io.IOException;
+import java.util.Set;
 
-import static ee.ctob.websocket.data.Reason.DISCONNECTED;
+import static ee.ctob.websocket.data.EnumMessage.BAD_REQUEST;
+import static ee.ctob.websocket.data.EnumMessage.DISCONNECTED;
 
-@Controller
+@Component
 public class WebSocketHandler extends TextWebSocketHandler {
 
     private final GameService gameService;
@@ -29,7 +36,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        gameService.playerAdd(new Player(session, System.currentTimeMillis()));
+        Player player = new Player(session, System.currentTimeMillis());
+        gameService.playerAdd(player);
+        sendMessage(new TextMessage(player.getValidationUUID().toString()), session);
     }
 
     @Override
@@ -42,9 +51,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
         Request request;
         try {
             request = objectMapper.readValue(message.getPayload(), Request.class);
-            validateBet(request);
+            validateRequest(request);
+            gameService.validatePlayer(request.getValidationUUID(), session);
         } catch (Exception e) {
-            sendMessage(new TextMessage("BAD_REQUEST"), session);
+            sendMessage(new TextMessage(BAD_REQUEST.name()), session);
             return;
         }
         gameService.playerBet(request, session);
@@ -59,11 +69,17 @@ public class WebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void validateBet(Request request) {
-        if(request.getNumber() > properties.getMaxBetNumber()
-                || request.getNumber()< properties.getMinBetNumber()
-                || request.getAmount() <= 0 ) {
-            throw new RuntimeException("BadRequest");
+    private void validateRequest(Request request) {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+
+        Set<ConstraintViolation<Request>> violations = validator.validate(request);
+
+        if (!violations.isEmpty()) {
+            for (ConstraintViolation<Request> violation : violations) {
+                System.out.println(violation.getPropertyPath() + ": " + violation.getMessage());
+            }
+            throw new RuntimeException();
         }
     }
 

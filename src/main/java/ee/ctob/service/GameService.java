@@ -7,7 +7,7 @@ import ee.ctob.data.Player;
 import ee.ctob.data.Result;
 import ee.ctob.data.Winner;
 import ee.ctob.websocket.config.WebSocketProperties;
-import ee.ctob.websocket.data.Reason;
+import ee.ctob.websocket.data.EnumMessage;
 import ee.ctob.websocket.data.Request;
 import ee.ctob.websocket.data.Response;
 import lombok.RequiredArgsConstructor;
@@ -20,21 +20,18 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static ee.ctob.data.enums.BetResult.LOSE;
 import static ee.ctob.data.enums.BetResult.WIN;
-import static ee.ctob.websocket.data.Reason.TIMEOUT;
+import static ee.ctob.websocket.data.EnumMessage.*;
 import static org.springframework.web.socket.CloseStatus.SESSION_NOT_RELIABLE;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GameService extends GameRoomService {
+public class GameService {
 
     private final GuessGameProperties gameProperties;
     private final WebSocketProperties webSocketProperties;
@@ -52,17 +49,25 @@ public class GameService extends GameRoomService {
         log.info("Player joined () -> {} ", player.getNickname());
     }
 
-    public void playerRemove(WebSocketSession session, Reason reason) {
+    public void playerRemove(WebSocketSession session, EnumMessage enumMessage) {
         Player player = players.remove(session);
         currentBets.removeIf(bet -> bet.getPlayer().getSession().equals(session));
 
-        log.info("Player removed {} , reason {}" , player.getNickname(), reason);
+        log.info("Player removed {} , reason {}" , player.getNickname(), enumMessage);
 
         checkPlayers();
     }
 
+    public void validatePlayer(UUID validationUUID, WebSocketSession session) {
+        if(players.get(session).getValidationUUID().equals(validationUUID)) {
+            return;
+        }
+        throw new RuntimeException();
+    }
+
     public void playerBet(Request request, WebSocketSession session) {
         Player player = players.get(session);
+
         if(!player.getNickname().equals(request.getNickname()) && request.getNickname() != null) {
             player.setNickname(request.getNickname());
         }
@@ -74,7 +79,7 @@ public class GameService extends GameRoomService {
                 individualBetsCount++;
             }
             if(individualBetsCount >= gameProperties.getMaxIndividualBets()) {
-                sendMessage(new TextMessage("BETS_LIMIT_ERROR"), session);
+                sendMessage(new TextMessage(BETS_LIMIT.name()), session);
                 return;
             }
         }
@@ -87,6 +92,8 @@ public class GameService extends GameRoomService {
                         .number(request.getNumber())
                         .amount(request.getAmount())
                         .build());
+
+        sendMessage(new TextMessage(BET_ACCEPTED.name()), session);
     }
 
     public void gameStartLoop() {
@@ -123,7 +130,7 @@ public class GameService extends GameRoomService {
                 if (bet.getNumber() == winningNumber) {
                     result.betResult(WIN);
                     double winAmount = BigDecimal.valueOf(bet.getAmount() * gameProperties.getPayoutMultiplier())
-                            .setScale(2, RoundingMode.HALF_UP)
+                            .setScale(2, RoundingMode.HALF_DOWN)
                             .doubleValue();
                     result.winAmount(winAmount);
 
@@ -156,7 +163,7 @@ public class GameService extends GameRoomService {
             if(now - player.getLastActivity() > TimeUnit.SECONDS.toMillis(webSocketProperties.getTimeout())) {
                 try {
                     WebSocketSession session = player.getSession();
-                    sendMessage(new TextMessage("SESSION_TIMEOUT"), session);
+                    sendMessage(new TextMessage(TIMEOUT.name()), session);
                     session.close(SESSION_NOT_RELIABLE);
                     playerRemove(session, TIMEOUT);
                     log.info("Session timeout {}", player.getNickname());

@@ -5,6 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @Data
 @Primary
@@ -12,10 +14,6 @@ import org.springframework.stereotype.Component;
 public class GuessGameProperties {
     boolean available;
     int maxIndividualBets;
-    int maxPlayersInRoom;
-    int maxRooms;
     int roundSeconds;
     double payoutMultiplier;
-    int maxBetNumber;
-    int minBetNumber;
 }
