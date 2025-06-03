@@ -9,5 +9,4 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "websocket")
 public class WebSocketProperties {
     int timeout;
-    int pingPong;
 }

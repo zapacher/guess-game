@@ -10,6 +10,10 @@ import org.springframework.stereotype.Component;
 @Primary
 @ConfigurationProperties(prefix = "game")
 public class GuessGameProperties {
+    boolean available;
+    int maxIndividualBets;
+    int maxPlayersInRoom;
+    int maxRooms;
     int roundSeconds;
     double payoutMultiplier;
     int maxBetNumber;

@@ -30,7 +30,7 @@ import static org.springframework.web.socket.CloseStatus.SESSION_NOT_RELIABLE;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GameService {
+public class GameService extends GameRoomService {
 
     private final GuessGameProperties gameProperties;
     private final WebSocketProperties webSocketProperties;
@@ -64,6 +64,17 @@ public class GameService {
         }
         player.setLastActivity(System.currentTimeMillis());
 
+        int individualBetsCount = 0;
+        for(Bet bet : currentBets) {
+            if(bet.getPlayer().getSession().equals(session)) {
+                individualBetsCount++;
+            }
+            if(individualBetsCount >= gameProperties.getMaxIndividualBets()) {
+                sendMessage(new TextMessage("BETS_LIMIT_ERROR"), session);
+                return;
+            }
+        }
+
         log.info("Player {} bet {} on number {}", player.getNickname(), request.getAmount(), request.getNumber());
 
         currentBets.add(
@@ -87,7 +98,7 @@ public class GameService {
 
             List<Winner> winners = new ArrayList<>();
 
-            Thread.sleep(gameProperties.getRoundSeconds()*1000);
+            Thread.sleep(TimeUnit.SECONDS.toMillis(gameProperties.getRoundSeconds()));
 
             int winningNumber = new Random().nextInt(10) + 1;
             log.info("Winning number {} ",  winningNumber);
@@ -133,7 +144,7 @@ public class GameService {
     private void connectionsTimeout() {
         long now = System.currentTimeMillis();
         for(Player player : players.values()) {
-            if(now - player.getLastActivity() > webSocketProperties.getTimeout()) {
+            if(now - player.getLastActivity() > TimeUnit.SECONDS.toMillis(webSocketProperties.getTimeout())) {
                 try {
                     player.getSession().close(SESSION_NOT_RELIABLE);
                     players.remove(player.getSession());

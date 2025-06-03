@@ -1,9 +1,12 @@
 game:
+  available: true
+  max-individual-bets: 1
+  max-players-in-room: 10
+  max-rooms: 10
   round-seconds: 10
   payout-multiplier: 9.9
   max-bet-number: 10
   min-bet-number: 1
 
 websocket:
-  timeout: 30
-  ping-pong: 5
+  timeout: 60

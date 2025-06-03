@@ -16,10 +16,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private final GameService gameService;
     private final GuessGameProperties properties;
+    private final WebSocketProperties webSocketProperties;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(new WebSocketHandler(gameService, properties), "/game/guess")
-                .setAllowedOrigins("*");
+        if (properties.isAvailable()) {
+            registry.addHandler(new WebSocketHandler(gameService, properties), "/game/guess")
+                    .setAllowedOrigins("*");
+        }
     }
 }
