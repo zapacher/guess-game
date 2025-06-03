@@ -7,6 +7,7 @@ import ee.ctob.data.Player;
 import ee.ctob.data.Result;
 import ee.ctob.data.Winner;
 import ee.ctob.websocket.config.WebSocketProperties;
+import ee.ctob.websocket.data.Reason;
 import ee.ctob.websocket.data.Request;
 import ee.ctob.websocket.data.Response;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import java.util.concurrent.*;
 
 import static ee.ctob.data.enums.BetResult.LOSE;
 import static ee.ctob.data.enums.BetResult.WIN;
+import static ee.ctob.websocket.data.Reason.TIMEOUT;
 import static org.springframework.web.socket.CloseStatus.SESSION_NOT_RELIABLE;
 
 @Slf4j
@@ -48,11 +52,11 @@ public class GameService extends GameRoomService {
         log.info("Player joined () -> {} ", player.getNickname());
     }
 
-    public void playerRemove(WebSocketSession session) {
+    public void playerRemove(WebSocketSession session, Reason reason) {
         Player player = players.remove(session);
         currentBets.removeIf(bet -> bet.getPlayer().getSession().equals(session));
 
-        log.info("Player left {}" , player.getNickname());
+        log.info("Player removed {} , reason {}" , player.getNickname(), reason);
 
         checkPlayers();
     }
@@ -93,6 +97,10 @@ public class GameService extends GameRoomService {
     }
 
     private void playRound() {
+        connectionsTimeout();
+        if(currentBets.isEmpty()) {
+            return;
+        }
         try {
             log.info("Round started");
 
@@ -114,7 +122,9 @@ public class GameService extends GameRoomService {
 
                 if (bet.getNumber() == winningNumber) {
                     result.betResult(WIN);
-                    double winAmount = bet.getAmount() * gameProperties.getPayoutMultiplier();
+                    double winAmount = BigDecimal.valueOf(bet.getAmount() * gameProperties.getPayoutMultiplier())
+                            .setScale(2, RoundingMode.HALF_UP)
+                            .doubleValue();
                     result.winAmount(winAmount);
 
                     winners.add(
@@ -138,7 +148,6 @@ public class GameService extends GameRoomService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        connectionsTimeout();
     }
 
     private void connectionsTimeout() {
@@ -146,8 +155,10 @@ public class GameService extends GameRoomService {
         for(Player player : players.values()) {
             if(now - player.getLastActivity() > TimeUnit.SECONDS.toMillis(webSocketProperties.getTimeout())) {
                 try {
-                    player.getSession().close(SESSION_NOT_RELIABLE);
-                    players.remove(player.getSession());
+                    WebSocketSession session = player.getSession();
+                    sendMessage(new TextMessage("SESSION_TIMEOUT"), session);
+                    session.close(SESSION_NOT_RELIABLE);
+                    playerRemove(session, TIMEOUT);
                     log.info("Session timeout {}", player.getNickname());
                 } catch (IOException e) {
                     throw new RuntimeException(e);

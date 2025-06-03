@@ -12,10 +12,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
+import static ee.ctob.websocket.data.Reason.DISCONNECTED;
 
 @Controller
 public class WebSocketHandler extends TextWebSocketHandler {
@@ -36,7 +34,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        gameService.playerRemove(session);
+        gameService.playerRemove(session, DISCONNECTED);
     }
 
     @Override
@@ -46,7 +44,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             request = objectMapper.readValue(message.getPayload(), Request.class);
             validateBet(request);
         } catch (Exception e) {
-            sendMessage(new TextMessage("Invalid message format"), session);
+            sendMessage(new TextMessage("BAD_REQUEST"), session);
             return;
         }
         gameService.playerBet(request, session);
@@ -62,7 +60,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
     }
 
     private void validateBet(Request request) {
-        if(request.getNumber() > properties.getMaxBetNumber() || request.getNumber()< properties.getMinBetNumber()) {
+        if(request.getNumber() > properties.getMaxBetNumber()
+                || request.getNumber()< properties.getMinBetNumber()
+                || request.getAmount() <= 0 ) {
             throw new RuntimeException("BadRequest");
         }
     }
