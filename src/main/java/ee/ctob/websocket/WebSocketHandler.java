@@ -2,11 +2,9 @@ package ee.ctob.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ctob.GuessGameProperties;
-import ee.ctob.service.GameService;
 import ee.ctob.data.Player;
+import ee.ctob.service.GameService;
 import ee.ctob.websocket.data.Request;
-import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -14,7 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.UUID;
 
 @Controller
 public class WebSocketHandler extends TextWebSocketHandler {

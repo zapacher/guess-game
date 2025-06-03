@@ -37,6 +37,9 @@ public class GameService {
 
     private final GuessGameProperties properties;
 
+    public void closeSession() {
+
+    }
 
     public void playerAdd(WebSocketSession session, Player player) {
         players.put(session, player);
@@ -45,8 +48,8 @@ public class GameService {
     }
 
     public void playerRemove(WebSocketSession session) {
-        players.remove(session);
-        log.info("Player left ");
+        Player player = players.remove(session);
+        log.info("Player left {}" , player.getNickname());
         checkPlayers();
     }
 
@@ -93,6 +96,9 @@ public class GameService {
             int winningNumber = new Random().nextInt(10) + 1;
             log.info("Winning number {} ",  winningNumber);
             for (Bet bet : currentBets) {
+                if(!bet.getPlayer().getSession().isOpen()) {
+                    continue;
+                }
                 Result.ResultBuilder result = Result.builder();
                 result.betNumber(bet.getNumber())
                         .betAmount(bet.getAmount())
@@ -112,6 +118,7 @@ public class GameService {
                 sendMessage(buildResponse(result.build()), bet.getPlayer().getSession());
             }
             if(!winners.isEmpty()) {
+                log.info("Players won {} ", winners);
                 broadcastAll(new TextMessage(objectMapper.writeValueAsString(winners)));
             }
             currentBets.clear();
@@ -128,12 +135,15 @@ public class GameService {
 
     @SneakyThrows
     private void sendMessage(Response response, WebSocketSession session) {
+        log.info("Send response {} ", response);
         sendMessage(new TextMessage(objectMapper.writeValueAsString(response)), session);
     }
 
     private void sendMessage(TextMessage textMessage, WebSocketSession session) {
         try {
-            session.sendMessage(textMessage);
+            if(session.isOpen()) {
+                session.sendMessage(textMessage);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
