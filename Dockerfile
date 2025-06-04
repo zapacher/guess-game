@@ -10,6 +10,6 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY --from=builder /app/build/libs/*.jar /app/app.jar
+COPY --from=builder /app/build/libs/app.jar /app/app.jar
 
 CMD ["java", "-jar", "/app/app.jar"]

@@ -9,15 +9,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8080"
-    networks:
-      - inner_network
+    volumes:
+      - ./src/main/resources/application.yml:/app/config/application.yml
     environment:
-      - SPRING_CONFIG_LOCATION=file:/app/local.yml,file:/src/main/resources/application.yml
-
-networks:
-  inner_network:
-    name: inner_network
-    ipam:
-      config:
-        - subnet: 172.33.0.0/16
-          gateway: 172.33.0.1
+      - SPRING_CONFIG_LOCATION=file:/app/config/application.yml

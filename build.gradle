@@ -36,6 +36,10 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.named('bootJar') {
+    mainClass.set('ee.ctob.Application')
+}
+
 bootJar {
     archiveFileName = 'app.jar'
 }
