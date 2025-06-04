@@ -37,13 +37,15 @@ tasks.named('test') {
 }
 
 tasks.named('bootJar') {
+    archiveFileName = 'app.jar'
     mainClass.set('ee.ctob.Application')
 }
 
-bootJar {
-    archiveFileName = 'app.jar'
+tasks.named('bootRun') {
+    dependsOn tasks.named('bootJar')
 }
 
-bootRun {
-    dependsOn bootJar
+tasks.register('bootRunWithTests') {
+    dependsOn(tasks.named('test'))
+    finalizedBy(tasks.named('bootRun'))
 }
