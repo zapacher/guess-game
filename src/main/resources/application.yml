@@ -3,6 +3,7 @@ game:
   max-individual-bets: 1
   round-seconds: 10
   payout-multiplier: 9.9
+  web-path: "/game/guess"
 
 websocket:
   timeout: 60

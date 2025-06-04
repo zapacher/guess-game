@@ -37,22 +37,18 @@ public class GameService {
     private final WebSocketProperties webSocketProperties;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private volatile boolean active = true;
     private List<Bet> currentBets = new CopyOnWriteArrayList<>();
     private final Map<WebSocketSession, Player> players = new ConcurrentHashMap<>();
 
 
     public void startRounds() {
         scheduler.scheduleWithFixedDelay(() -> {
-            if (!active || checkPlayers()) return;
             playRound();
         }, 0, gameProperties.getRoundSeconds(), TimeUnit.SECONDS);
     }
 
     public void playerAdd(Player player) {
         players.put(player.getSession(), player);
-        active = true;
-
         log.info("Player joined () -> {} ", player.getNickname());
     }
 
@@ -61,8 +57,6 @@ public class GameService {
         currentBets.removeIf(bet -> bet.getPlayer().getSession().equals(session));
 
         log.info("Player removed {} , reason {}" , player.getNickname(), enumMessage);
-
-        checkPlayers();
     }
 
     public void validatePlayer(UUID validationUUID, WebSocketSession session) {
@@ -85,7 +79,7 @@ public class GameService {
             if(bet.getPlayer().getSession().equals(session)) {
                 individualBetsCount++;
             }
-            if(individualBetsCount >= gameProperties.getMaxIndividualBets()) {
+            if(individualBetsCount >= gameProperties.getMaxIndividualBets() && gameProperties.getMaxIndividualBets() > 0) {
                 sendMessage(new TextMessage(BETS_LIMIT.name()), session);
                 return;
             }
@@ -105,9 +99,6 @@ public class GameService {
 
     private void playRound() {
         connectionsTimeout();
-        if(currentBets.isEmpty()) {
-            return;
-        }
         try {
             log.info("Round started");
 
@@ -172,15 +163,6 @@ public class GameService {
                 }
             }
         }
-    }
-
-    private boolean checkPlayers() {
-        if (players.isEmpty()) {
-            active = false;
-            log.info("No players");
-            return true;
-        }
-        return false;
     }
 
     private Response buildResponse(Result result) {

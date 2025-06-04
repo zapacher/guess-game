@@ -16,4 +16,5 @@ public class GuessGameProperties {
     int maxIndividualBets;
     int roundSeconds;
     double payoutMultiplier;
+    String webPath;
 }

@@ -19,7 +19,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         if (properties.isAvailable()) {
-            registry.addHandler(webSocketHandler.startGameService(), "/game/guess")
+            registry.addHandler(webSocketHandler.startGameService(), properties.getWebPath())
                     .setAllowedOrigins("*");
         }
     }
