@@ -32,7 +32,7 @@
 
 - Execute in terminal command `gradle bootRun` 
 
-### Run by docker
+### Run by Docker
 
 - Execute in terminal command `docker build -t guess-game-server . && docker run -p 8080:8080 guess-game-server`
 
