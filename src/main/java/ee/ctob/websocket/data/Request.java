@@ -20,6 +20,5 @@ public class Request {
     @Positive
     double amount;
 
-
     String nickname;
 }

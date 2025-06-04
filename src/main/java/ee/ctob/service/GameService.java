@@ -1,5 +1,6 @@
 package ee.ctob.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.ctob.GuessGameProperties;
 import ee.ctob.data.Bet;
@@ -11,7 +12,6 @@ import ee.ctob.websocket.data.EnumMessage;
 import ee.ctob.websocket.data.Request;
 import ee.ctob.websocket.data.Response;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -41,6 +41,13 @@ public class GameService {
     private List<Bet> currentBets = new CopyOnWriteArrayList<>();
     private final Map<WebSocketSession, Player> players = new ConcurrentHashMap<>();
 
+
+    public void startRounds() {
+        scheduler.scheduleWithFixedDelay(() -> {
+            if (!active || checkPlayers()) return;
+            playRound();
+        }, 0, gameProperties.getRoundSeconds(), TimeUnit.SECONDS);
+    }
 
     public void playerAdd(Player player) {
         players.put(player.getSession(), player);
@@ -94,13 +101,6 @@ public class GameService {
                         .build());
 
         sendMessage(new TextMessage(BET_ACCEPTED.name()), session);
-    }
-
-    public void gameStartLoop() {
-        scheduler.scheduleWithFixedDelay(() -> {
-            if (!active || checkPlayers()) return;
-            playRound();
-        }, 0, gameProperties.getRoundSeconds(), TimeUnit.SECONDS);
     }
 
     private void playRound() {
@@ -203,10 +203,13 @@ public class GameService {
         }
     }
 
-    @SneakyThrows
     private void sendMessage(Response response, WebSocketSession session) {
         log.info("Send response {} ", response);
-        sendMessage(new TextMessage(objectMapper.writeValueAsString(response)), session);
+        try {
+            sendMessage(new TextMessage(objectMapper.writeValueAsString(response)), session);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void sendMessage(TextMessage textMessage, WebSocketSession session) {

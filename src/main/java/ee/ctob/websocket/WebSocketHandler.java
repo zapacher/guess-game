@@ -1,12 +1,11 @@
 package ee.ctob.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.ctob.GuessGameProperties;
 import ee.ctob.data.Player;
 import ee.ctob.service.GameService;
 import ee.ctob.websocket.data.Request;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -23,15 +22,14 @@ import static ee.ctob.websocket.data.EnumMessage.BAD_REQUEST;
 import static ee.ctob.websocket.data.EnumMessage.DISCONNECTED;
 
 @Component
+@RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private final GameService gameService;
-    private final GuessGameProperties properties;
+    final GameService gameService;
 
-    public WebSocketHandler(GameService gameService, GuessGameProperties properties) {
-        this.gameService = gameService;
-        this.properties = properties;
-        gameService.gameStartLoop();
+    public WebSocketHandler startGameService() {
+        this.gameService.startRounds();
+        return WebSocketHandler.this;
     }
 
     @Override
