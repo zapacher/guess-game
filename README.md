@@ -57,7 +57,8 @@
 ```
     949c8c39-66e8-4a33-aa63-c218ef3842a5
 ```
-- UUID as String
+- UUID as String in plain text
+
 ### Bet Request
 ```
 {
@@ -105,7 +106,7 @@
 - `winAmount` - double
 
 ### Enum Messages
-
+- Enums are as String in plain text
 - `TIMEOUT` - no bets for some period
 - `BAD_REQUEST` - not valid request
 - `BETS_LIMIT` - this round already stacked a bet

@@ -42,9 +42,7 @@ public class GameService {
 
 
     public void startRounds() {
-        scheduler.scheduleWithFixedDelay(() -> {
-            playRound();
-        }, 0, gameProperties.getRoundSeconds(), TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::playRound, 0, gameProperties.getRoundSeconds(), TimeUnit.SECONDS);
     }
 
     public void playerAdd(Player player) {
